@@ -1,0 +1,4 @@
+journal: eip
+vol: 19
+iss: 2
+year: 2018
