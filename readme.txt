@@ -1,4 +1,4 @@
-Bepress2Portico transforms Bepress XML into the Portico export files.
+Bepress2Portico transforms Bepress XML into the Portico and CrossRef export files.
 
 INSTALLING 
 Copy the Bepress2Portico folder with the config, Bpress, and helper files.
