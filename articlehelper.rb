@@ -5,7 +5,7 @@ require 'fileutils'
 
 #creates Article class
 class Article
-	attr_accessor :url, :journalid, :issn, :publishername, :doi, :subject, :articletitle, :datetype, :pubformat, :isodate, :day, :month, :year, :vol, :iss, :elocationid, :cstatement, :license, :cyear, :suri, :fauthor, :lauthor, :abstract
+	attr_accessor :jtitle, :url, :journalid, :issn, :publishername, :doi, :subject, :articletitle, :datetype, :pubformat, :isodate, :day, :month, :year, :vol, :iss, :elocationid, :cstatement, :license, :cyear, :suri, :fauthor, :lauthor, :abstract
 end
 
 #Formats configurations from config.txt
@@ -78,7 +78,7 @@ def format (input)
 end
 
 #Creates an XML file from an article obj
-def porticoize(a, root_foldername)
+def porticoize(a, root_foldername, vol, iss, publisher)
 	puts "Creating xml " + a.suri
 	xml_temp = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <!DOCTYPE article
@@ -92,7 +92,7 @@ def porticoize(a, root_foldername)
          <journal-id journal-id-type=\"publisher-id\">" + a.journalid.to_s + "</journal-id>
 	     <issn pub-type=\"epub\">"+ a.issn.to_s + "</issn>
 	         <publisher>
-	            <publisher-name>Pacific University Libraries</publisher-name>
+	            <publisher-name>" + publisher + "</publisher-name>
 	         </publisher>
 	      </journal-meta>
 	      <article-meta>
@@ -124,8 +124,8 @@ def porticoize(a, root_foldername)
 	            <month>" + a.month.to_s + "</month>
 	            <year>" + a.year.to_s + "</year>
 	         </pub-date>
-	         <volume>" + a.vol.to_s + "</volume>
-	         <issue>" + a.iss.to_s + "</issue>
+	         <volume>" + vol.to_s + "</volume>
+	         <issue>" + iss.to_s + "</issue>
 	         <elocation-id>" + a.elocationid.to_s + "</elocation-id>
 	         <permissions>
 	            <copyright-statement>" + a.cstatement.to_s + "</copyright-statement>
@@ -167,4 +167,66 @@ def porticoize(a, root_foldername)
         	file.write(resp.body)
     	end
 	}
+end
+
+#Creates an XML file from an article obj
+def crossref(a, root_foldername, vol, iss, publisher, email, depositor, batchid)
+	puts "Creating xml " + a.suri
+	xml_temp = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<doi_batch xmlns=\"http://www.crossref.org/schema/4.3.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" version=\"4.3.0\" xsi:schemaLocation=\"http://www.crossref.org/schema/4.3.0 http://www.crossref.org/schema/deposit/crossref4.3.0.xsd\">
+	<head>
+		<doi_batch_id>" + batchid + "</doi_batch_id>
+		<timestamp>" + Time.now.strftime("%y%m%d%H%M%S").to_s + "</timestamp>
+		<depositor>
+			<name>" + depositor + "</name>
+			<email_address>" + email + "</email_address>
+		</depositor>
+		<registrant>" + publisher + "</registrant>
+	</head>"
+	xml_temp = xml_temp + 
+	"<body>
+		<journal>
+			<journal_metadata>
+				<full_title>" + a.jtitle + "</full_title>
+				<issn media_type=\"electronic\">" + a.issn + "</issn>
+			</journal_metadata>
+			<journal_issue>
+				<publication_date media_type=\"online\">
+					<month>" + a.month + "</month>
+					<day>" + a.day + "</day>
+					<year>" + a.year + "</year>
+				</publication_date>
+				<journal_volume>
+					<volume>" + vol.to_s + "</volume>
+				</journal_volume>
+				<issue>" + iss.to_s + "</issue>
+			</journal_issue>
+			<journal_article publication_type=\"full_text\">
+				<titles>
+					<title>" + a.articletitle + "</title>
+				</titles>
+				<contributors>
+					<person_name contributor_role=\"author\" sequence=\"first\">
+						<given_name>" + a.fauthor + "</given_name>
+						<surname>" + a.lauthor + "</surname>
+					</person_name>
+				</contributors><publication_date media_type=\"online\">
+					<month>" + a.month + "</month>
+					<day>" + a.day + "</day>
+					<year>" + a.year + "</year>
+				</publication_date>
+				<doi_data>
+					<doi>" + a.doi + "</doi>
+					<resource>" + a.url + "</resource>
+				</doi_data>
+			</journal_article>
+		</journal>
+	</body>
+</doi_batch>"
+
+	#Writes xml to file in folder
+	article_filename = a.suri.to_s.gsub("\n", '')
+	article_filepath = root_foldername.gsub("\n", '')
+	#Writes to file in folder
+	File.open(article_filepath + '/' + article_filename + '.xml' , 'w'){|f| f.write(xml_temp)}
 end

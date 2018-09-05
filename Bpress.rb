@@ -11,8 +11,13 @@ journallabel = readParam(config, config.index('journal: ') + 9)
 vol = readParam(config, config.index('vol: ') + 5)
 iss = readParam(config, config.index('iss: ') + 5)
 year = readParam(config, config.index('year: ') + 6)
+publisher = readParam(config, config.index('publisher: ') + 11)
+email = readParam(config, config.index('email: ') + 7)
+depositor = readParam(config, config.index('depositor: ') + 11)
+urlbase = readParam(config, config.index('urlbase: ') + 9).to_s
+batchid = readParam(config, config.index('batchid: ') + 9).to_s
 
-url = 'https://commons.pacificu.edu/do/oai/?metadataPrefix=document-export&verb=ListRecords&set=publication:' + journallabel + '/vol' + vol + '/iss' + iss + '/'
+url = urlbase + '?metadataPrefix=document-export&verb=ListRecords&set=publication:' + journallabel + '/vol' + vol + '/iss' + iss + '/'
 root_foldername = journallabel + '_' + vol + '_' + iss + '_' + year 
 puts "Creating folder: " + root_foldername
 root_filename = root_foldername + '.xml'
@@ -37,6 +42,9 @@ arr = Array.new
 articles = @doc.xpath("//record//metadata//document-export//documents//document")
 puts "Number of articles detected: " + no_articles.to_s
 
+#Import journal title
+jtitle = @doc.xpath("publication-title")
+
 #Gets article data to fill array 
 for i in 0..no_articles do
 	arr[i] = Article.new
@@ -44,8 +52,9 @@ for i in 0..no_articles do
 	if articles[i] 
 	 	title = i_article.xpath("title")
 	 	arr[i].articletitle = format(title.text)
-	 	
 
+	 	arr[i].jtitle = jtitle.to_s
+	 	
 	 	url = i_article.xpath("fulltext-url")
 	 	arr[i].url = format(url.text)
 
@@ -101,7 +110,16 @@ end
 arr.each do |item|
 	unless (item.suri.to_s.empty?) 
 		puts "Formatting for Portico ... " + item.suri
-		porticoize(item, root_foldername)
+		porticoize(item, root_foldername, vol.text, iss.text, publisher)
+	end
+end
+
+#Makes issue folder for files
+FileUtils.mkdir_p "CrossRef_" + root_foldername 
+arr.each do |item|
+	unless (item.suri.to_s.empty?) 
+		puts "Formatting for Crossref ... " + item.suri
+		crossref(item, "CrossRef_" + root_foldername, vol.text, iss.text, publisher, email, depositor, batchid)
 	end
 end
 

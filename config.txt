@@ -2,3 +2,8 @@ journal: eip
 vol: 19
 iss: 2
 year: 2018
+publisher: Pacific University Libraries
+email: test@test.edu
+depositor: Pacific University Press
+urlbase: https://commons.pacificu.edu/do/oai/
+batchid: testbatch123
