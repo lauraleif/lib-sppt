@@ -3,9 +3,14 @@ require 'uri'
 require 'Nokogiri'
 require 'fileutils'
 
-#creates Article class
+#Creates Article class
 class Article
-	attr_accessor :jtitle, :url, :journalid, :issn, :publishername, :doi, :subject, :articletitle, :datetype, :pubformat, :isodate, :day, :month, :year, :vol, :iss, :elocationid, :cstatement, :license, :cyear, :suri, :fauthor, :lauthor, :abstract
+	attr_accessor :jtitle, :url, :journalid, :issn, :publishername, :doi, :subject, :articletitle, :datetype, :pubformat, :isodate, :day, :month, :year, :vol, :iss, :elocationid, :cstatement, :license, :cyear, :suri, :authors, :abstract
+end
+
+#Creates Author class
+class Author
+	attr_accessor :fname, :lname
 end
 
 #Formats configurations from config.txt
@@ -36,7 +41,6 @@ def clean_xml(line, output)
 	line = line.gsub('&lt;em&gt;', '&lt;italic&gt;')
 	line = line.gsub('&lt;/em&gt;', '&lt;/italic&gt;')
 	output = output + line
-	#puts output
 	return output
 end
 
@@ -105,16 +109,19 @@ def porticoize(a, root_foldername, vol, iss, publisher)
 	         <title-group>
 	            <article-title>" + a.articletitle.to_s + "</article-title>
 	         </title-group>"
-	   	unless (a.lauthor.to_s.empty? && a.fauthor.to_s.empty?)
+	   	unless (a.authors.to_s.empty?)
 	   		xml_temp = xml_temp +
-	         "<contrib-group>
-	            <contrib contrib-type=\"author\">
-	               <name>
-	                  <surname>" + a.lauthor.to_s + "</surname>
-	                  <given-names>" + a.fauthor.to_s + "</given-names>
-	               </name>
-	            </contrib>
-	         </contrib-group>"
+	         "<contrib-group>" 
+	         	for j in 0..(a.authors.size-1) do
+		            xml_temp = xml_temp + "<contrib contrib-type=\"author\">
+		               <name>
+		                  <surname>" + a.authors[j].lname + "</surname>
+		                  <given-names>" + a.authors[j].fname + "</given-names>
+		               </name>
+		            </contrib>"
+		        end
+		    xml_temp = xml_temp +
+	        "</contrib-group>"
 	     end
 	     xml_temp = xml_temp +
 	         "<pub-date date-type=\"pub\"
@@ -205,12 +212,16 @@ def crossref(a, root_foldername, vol, iss, publisher, email, depositor, batchid)
 				<titles>
 					<title>" + a.articletitle + "</title>
 				</titles>
-				<contributors>
-					<person_name contributor_role=\"author\" sequence=\"first\">
-						<given_name>" + a.fauthor + "</given_name>
-						<surname>" + a.lauthor + "</surname>
-					</person_name>
-				</contributors><publication_date media_type=\"online\">
+				<contributors>"
+					for j in 0..(a.authors.size-1) do
+		            xml_temp = xml_temp + "<person_name contributor_role=\"author\">
+		                  <given-name>" + a.authors[j].fname + "</given-name>
+		                  <surname>" + a.authors[j].lname + "</surname>
+					</person_name>"
+		        	end
+		        xml_temp = xml_temp + 
+				"</contributors>
+				<publication_date media_type=\"online\">
 					<month>" + a.month + "</month>
 					<day>" + a.day + "</day>
 					<year>" + a.year + "</year>

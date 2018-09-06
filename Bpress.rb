@@ -96,11 +96,20 @@ for i in 0..no_articles do
 
 		arr[i].suri = arr[i].journalid.to_s + arr[i].elocationid.to_s + ""
 
-		fauthor = i_article.xpath("authors//author//fname")
-		arr[i].fauthor = format(fauthor.text)
-
-		lauthor = i_article.xpath("authors//author//lname")
-		arr[i].lauthor = format(lauthor.text)
+		#Reads in all authors
+		author_nodes = i_article.xpath("authors//author")
+		#Creates array to store authors
+		creators = Array.new
+		for j in 0..(author_nodes.size-1) do
+		 	auth = Author.new
+		 	#Refine the authors
+		  	auth.fname = author_nodes[j].xpath("fname").text
+		  	auth.lname = author_nodes[j].xpath("lname").text
+		  	creators[j] = auth
+		end
+		unless creators.nil? 
+			arr[i].authors = creators 
+		end
 
 		abstract = i_article.xpath("abstract")
 		arr[i].abstract = format(abstract.text)
